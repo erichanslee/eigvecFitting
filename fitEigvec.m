@@ -47,7 +47,7 @@ end
 function [residual, vec] = calcResidual(method, Ashift, x1, win, rangerest)
 switch method
     case 'backward'
-        [vs,sigma] = svds(Ashift',1,'smallest');
+        [us, ds, vs] = svds(Ashift,1,'smallest');
         x2 = vs(rangerest);
         ax1 = Ashift(:,win)*x1;
         ax2 = Ashift(:,rangerest)*x2;
@@ -59,7 +59,7 @@ switch method
         vec = [x1; x2];
         
     case 'forward'
-        [vs,sigma] = svds(Ashift',1,'smallest');
+        [us, ds, vs] = svds(Ashift,1,'smallest');
         vs_win = vs(win);
         vs_win = normalizematrix(vs_win);
         residual = 1 - abs(x1'*vs_win);
@@ -80,10 +80,10 @@ switch method
         G = Ashift*T;
         
         % Calculate smallest eigenvector and then form eigenvector
-        [vs,alpha] = svds(G',1,'smallest');
+        [us, ds, vs] = svds(G,1,'smallest');
         xfull(1:length(win)) = vs(1)*x1;
         xfull((length(win)+1):end) = vs(2:end);
         residual = norm(Ashift*xfull);
-        vec = P'*xfull;
+        vec = vs(2:end);
 end
 end
