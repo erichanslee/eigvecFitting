@@ -1,0 +1,99 @@
+\input{header}
+
+\title{Convex Optimization Project Proposal}
+\author{Eric Lee }
+\date{}
+
+\begin{document}
+\maketitle
+\abstract{Contingency Identification in the context of Smart Grids is the act of identifying contingencies, which are failures such as a downed line or failed generator, in a Power System using time-domain sensor data. We can reformulate this problem as an optimization problem in which, given a \textit{Partial Eigenpair} $\langle \mu_i,Hv_i \rangle$ of some matrix $\mathcal{J}$, one attmepts to fit the full eigenpair $\langle \mu_i,v_i \rangle$}
+\section{Overiew}
+We are given a linear differential algebraic equation (DAE) completely characterizing a Power System. 
+\begin{equation} \label{DAELinear}
+Ez' = \mathcal{J} z
+\end{equation}
+Then the solution to (\ref{DAELinear}) has the form
+\begin{equation}\label{DAESolution}
+z(t) = \sum_{i = 1}^{k} c_i e^{\mu_it}v_i = \sum_{i = 1}^{k} e^{\mu_it}d_i
+\end{equation}
+Where $\langle \mu_i,v_i \rangle$ are the non-infinite \textit{eigenpairs} of the generalized eigenvalue problem $\mathcal{J} v_i = \mu_i Ev_i $, the $v_i$ are restricted to have unit length, and $c_i$ are some constants determined by the initial condition. We can fold in our constants into our eigenvectors i.e. rewrite our solution into a slightly more compact form with $d_i = c_i v_i$. 
+
+If one has a set of sensors, known as Phasor Measurement Units or PMUs, placed around the power system outputting a signal $f(t)$, then $f(t)$ can be explained mathematically as 
+\begin{equation}\label{PMUSolution}
+f(t) = Hz(t) = \sum_{i = 1}^{k} e^{\mu_it}Hd_i
+\end{equation}
+Note that $H$ simply picks out a subset of $z(t)$, since voltage readings are in the set of algebraic variables. So to be more precise, we get the \textit{Partial Eigenpair}
+$\langle \mu_i,Hv_i \rangle$ from the sensors
+
+
+\section{Problem Set-Up}
+Given a dictionary of contingency matrices, which is the set of possible Power System models we are considering
+$$ \mathcal{D} =  \{ J_1, J_2, \dots, J_n \} $$
+And a set of sensor readings 
+$$ \mathcal{P} =  \{ \langle \lambda_1,x_1 \rangle, \langle \lambda_1,x_2 \rangle, \dots, \langle \lambda_n,x_n \rangle \} $$
+We want to see which $J \in \mathcal{D}$ is most likely responsible for generating $\mathcal{P}$. More formally, 
+we must lay down some notion of ``distance'' $T: \mathcal{D} \times \mathcal{P} \rightarrow \mathbb{R}$. The $J \in \mathcal{D}$ with the smallest distance to each element in $\mathcal{P}$ is the contingency we diagnose as the most likely. 
+\subsection{$M(\lambda, x, J)$}
+We previously defined this notion of distance as
+\begin{equation}
+M(\lambda, x, J) = \min_{\alpha, y} \bigg{ \| } \bigg{(}E {\lambda} - J\bigg{)}
+\begin{pmatrix}
+\alpha x \\
+y
+\end{pmatrix}
+     \bigg{ \| }_2^2
+\end{equation}
+$$ \text{subject to } \alpha^2 + \|y\|_2^2 = 1$$
+ With 
+$\langle \lambda,x \rangle \in \mathcal{P}$ and $J \in \mathcal{D}$. This is a straightforwad matrix norm calculation, and led to excellent results initially. Simulating line failures in the IEEE 57 bus system (one of the canonical Power Network researchers test on), we were able to identify 100 percent of all line failures with only three sensors on the network. 
+
+However, our results were incredibly poor with even minimal amounts of noise. We have simply hypothesis for why; Let's say that $$\bar{\alpha}, \bar{y} = \argmin_{\alpha,y} M(\lambda, x, J)$$ i.e. $\bar{\alpha}$ and $\bar{y}$ are solutions to the non-noisy problem. 
+ Then we can find a simple upper bound by plugging $\bar{\alpha}$ and $\bar{y}$ into the noisy optimization problem
+\begin{equation}
+M(\lambda + \delta, x + \epsilon, J) = \min_{\alpha, y} \bigg{ \| } \bigg{(}E (\lambda + \delta) - J\bigg{)}
+\begin{pmatrix}
+\alpha (x + \epsilon) \\
+y
+\end{pmatrix}
+     \bigg{ \| }_2^2
+\end{equation}
+$$ \text{subject to } \alpha^2 + \|y\|_2^2 = 1$$
+
+
+$$\leq 
+M(\lambda, x, J) + 
+\bigg{\|} \delta E \begin{pmatrix}
+\bar{\alpha} (x + \epsilon) \\
+\bar{y}
+\end{pmatrix} + (E {\lambda} - J )
+\begin{pmatrix}
+\bar{\alpha} \epsilon \\
+0
+\end{pmatrix}
+\bigg{\|}_2^2
+$$
+
+$$ \leq M(\lambda, x, J) + \epsilon\lambda_{max}(E {\lambda} - J)$$ 
+where $\lambda_{max}(A)$ is the largest eigenvector in absolute value of $A$. Note that this is not necessarily the ideal upper bound; the $\lambda_{max}$ term gives us some problems. 
+
+\section{Proposal Details}
+We have laid out a fitting methods $M(\lambda, x, J)$, which is highly accurate without noise but suffers a massive loss in accuracy when faced with noise. We want to make $M(\lambda, x, J)$ more robust. We plan on doing so in two ways. 
+\begin{enumerate}
+\item The first is via standard robust optimization; we add an error term to be fit in the objective function. So for example, we introduce the robust distance
+\begin{equation}
+M_r(\lambda, x, J) = \min_{\alpha, y, \alpha, \epsilon} \bigg{ \| } \bigg{(}E {\lambda} - J\bigg{)}
+\begin{pmatrix}
+\alpha_r x \\
+y_r
+\end{pmatrix}
+     \bigg{ \| }_2^2
+\end{equation}
+$$ \text{subject to } \alpha^2 + \|y\|_2^2 = 1$$
+$$ \alpha_r = \alpha + \delta$$
+$$ y_r = y + \epsilon$$
+
+\item The second is via changing the loss function; the L2 loss function is easy to work with, but perhaps not optimal. We plan on looking into the Huber loss function, as we expect our readings to have a number of outliers due to sensing error which we have not taken into account. 
+\end{enumerate}
+For both items, we hope to build up some theoretical guarantees as well as some implementation, and ultimately improve the results of our research.
+
+\end{document}
