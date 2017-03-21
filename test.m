@@ -1,6 +1,5 @@
 % Tests fitEigvec routine for stability
 
-
 % Initialize Data
 n = 100; % Size of Matrix
 k = 10; % Size of Subset
@@ -22,7 +21,7 @@ disp(d_in)
 
 % Fit with noise
 noise = 0.01;
-VN_in = V_in + 0.001*randn(size(V_in)).*V_in;
+VN_in = V_in + 0.01*randn(size(V_in)).*V_in;
 VN_in = normalizematrix(VN_in);
 dN_in = d_in + 0.01*randn(size(d_in)).*d_in;
 [fResN, fVecN] = fitEigvec(A, method, dN_in, VN_in, win);

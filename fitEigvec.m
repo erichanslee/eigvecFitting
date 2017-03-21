@@ -59,12 +59,31 @@ switch method
         vec = [x1; x2];
         
     case 'forward'
-        [us, ds, vs] = svds(Ashift,1,'smallest');
+        [vs, ds] = eigs(Ashift, 2, 'SM');
+        vs_win = vs(win,:);
+        [Q,R] = qr(vs_win);
+        c = Q'*x1;
+        residual = 1-max(abs(c));
+        vec = c;
+        
+    case 'alpha'
+        [vs, ds] = eigs(Ashift, 1, 'SM');
         vs_win = vs(win);
-        vs_win = normalizematrix(vs_win);
-        residual = 1 - abs(x1'*vs_win);
-        vec = vs_win;
-
+        vs_rangerest = vs(rangerest);
+        A1 = Ashift(:,win);
+        A2 = Ashift(:,rangerest);
+        y1 = A1 * vs_win;
+        y2 = A2 * vs_rangerest;
+        alpha = -(y1'*y2)/(y1'*y1);
+        x = zeros(size(Ashift,1),1);
+        x(win) = alpha*vs_win;
+        x(rangerest) = vs_rangerest;
+        vec = Ashift*x;
+        residual = norm(vec);
+        
+        
+        
+        
     case 'both'  % Constrained Fitting
         
         xfull = zeros(length(Ashift),1);
