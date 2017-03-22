@@ -8,7 +8,7 @@
 \maketitle
 
 \section{Abstract}
-Contingency Identification in the context of Smart Grids is the act of identifying contingencies, which are failures such as a downed line or failed generator, in a Power System using time-domain sensor data. We can reformulate this problem as an optimization problem in which, given a \textit{Partial Eigenpair} $\langle \mu_i,Hv_i \rangle$ of some matrix $\mathcal{J}$, one attmepts to fit the full eigenpair $\langle \mu_i,v_i \rangle$
+Contingency Identification in the context of Smart Grids is the act of diagnosing contingencies, which are failures such as a downed line or failed generator, in a Power System using time-domain sensor data. We can reformulate this problem as an optimization problem in which, given a \textit{Partial Eigenpair} $\langle \mu_i,Hv_i \rangle$ of some matrix $\mathcal{J}$, one attmepts to fit the full eigenpair $\langle \mu_i,v_i \rangle$
 \section{Overiew}
 We are given a linear differential algebraic equation (DAE) completely characterizing a Power System. 
 \begin{equation} \label{DAELinear}
@@ -24,8 +24,8 @@ If one has a set of sensors, known as Phasor Measurement Units or PMUs, placed a
 \begin{equation}\label{PMUSolution}
 f(t) = Hz(t) = \sum_{i = 1}^{k} e^{\mu_it}Hd_i
 \end{equation}
-Note that $H$ simply picks out a subset of $z(t)$, since voltage readings are in the set of algebraic variables. So to be more precise, we get the \textit{Partial Eigenpair}
-$\langle \mu_i,Hv_i \rangle$ from the sensors
+Note that $H$ simply picks out a subset of $z(t)$, since we have pushed $H$ onto the eigenvectors. So to be more precise, we get the \textit{Partial Eigenpair}
+$\langle \mu_i,Hv_i \rangle$ from the sensors where $Hv_i \subset v_i$. 
 
 
 \section{Problem Set-Up}
@@ -47,9 +47,9 @@ y
 \end{equation}
 $$ \text{subject to } \alpha^2 + \|y\|_2^2 = 1$$
  With 
-$\langle \lambda,x \rangle \in \mathcal{P}$ and $J \in \mathcal{D}$. This is a straightforwad matrix norm calculation, and led to excellent results initially. Simulating line failures in the IEEE 57 bus system (one of the canonical Power Network researchers test on), we were able to identify 100 percent of all line failures with only three sensors on the network. 
+$\langle \lambda,x \rangle \in \mathcal{P}$ and $J \in \mathcal{D}$. Intuitively, we have our eigenvector subset $x$, and are attempting to fit the rest of the eigenvector $y$ subject to a norm constraint on the fitting. This is a straightforward matrix norm calculation and led to excellent results initially. 
 
-However, our results were incredibly poor with even minimal amounts of noise. We have simply hypothesis for why; Let's say that $$\bar{\alpha}, \bar{y} = \argmin_{\alpha,y} M(\lambda, x, J)$$ i.e. $\bar{\alpha}$ and $\bar{y}$ are solutions to the non-noisy problem. 
+However, our results were incredibly poor with even minimal amounts of noise. We have simple hypothesis for why; Let's say that $$\bar{\alpha}, \bar{y} = \argmin_{\alpha,y} M(\lambda, x, J)$$ i.e. $\bar{\alpha}$ and $\bar{y}$ are solutions to the non-noisy problem. 
  Then we can find a simple upper bound by plugging $\bar{\alpha}$ and $\bar{y}$ into the noisy optimization problem
 \begin{equation}
 M(\lambda + \delta, x + \epsilon, J) = \min_{\alpha, y} \bigg{ \| } \bigg{(}E (\lambda + \delta) - J\bigg{)}
